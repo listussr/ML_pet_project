@@ -416,6 +416,61 @@ public:
 		(*this) /= sqrt(square_len);
 	}
 
+	void z_normalize()
+	{
+		T m = this->mean();
+		T s = this->std();
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			this->vect[i] = (this->vect[i] - m) / s;
+		}
+	}
+
+	void normalize_by_max()
+	{
+		T max = this->vect[0];
+		for (size_t i = 1; i < this->size; ++i)
+		{
+			max = this->vect[i] > max ? this->vect[i] : max;
+		}
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			this->vect[i] /= max;
+		}
+	}
+
+	/// <summary>
+	/// Math expectation
+	/// </summary>
+	/// <returns></returns>
+	T mean()
+	{
+		T math_expectation = 0;
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			math_expectation += this->vect[i];
+		}
+		math_expectation /= this->size;
+		return math_expectation;
+	}
+
+	/// <summary>
+	/// Standard deviation
+	/// </summary>
+	/// <returns></returns>
+	T std()
+	{
+		T std = 0;
+		T m = this->mean();
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			std += (this->vect[i] - m) * (this->vect[i] - m);
+		}
+		std /= this->size;
+		std = sqrt(std);
+		return std;
+	}
+
 	vector<ftype> elementwise(const vector<T>& vec_)
 	{
 		assert(vec_.size == this->size);
