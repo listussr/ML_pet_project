@@ -2,105 +2,9 @@
 #include"Linear.h"
 #include"NeuralNetwork.h"
 #include"CSVHandler.h"
-//#include"MNISTDatasetTest.h"
 #include<algorithm>
-
-
-/// <summary>
-/// function of generation linear function:
-///		f[i] = k * x + b
-/// </summary>
-/// <param name="train"> - include noise if train</param>
-/// <param name="start_val"> - coefficient "b"</param>
-/// <param name="size"> - amount of points in function vector</param>
-/// <param name="coefficent"> - coefficent "k"</param>
-/// <returns></returns>
- 
-vector<ftype> generate_lin_function(bool train, itype start_val, itype size, ftype coefficent)
-{
-	vector<ftype> fun;
-	for (itype i = start_val; i < start_val + size; ++i)
-	{
-		fun.push_back(
-			(ftype)(!train ? i : coefficent * (i + ((ftype)rand() / RAND_MAX * (rand() % 2))))
-		);
-	}
-	return fun;
-}
-
-vector<ftype> generate_two_var_lin_function(bool train, vector<ftype> start_val, itype size, ftype coefficent_1, ftype coefficent_2)
-{
-	vector<ftype> fun;
-	for (itype i = start_val[0], j = start_val[0]; i < start_val[0] + size; ++i, ++j)
-	{
-		fun.push_back(
-			coefficent_1 * i + coefficent_2 * j
-		);
-	}
-	return fun;
-}
-
-vector<ftype> generate_three_var_lin_function(bool train, vector<ftype> start_val, itype size, ftype coefficent_1, ftype coefficent_2, ftype coefficent_3)
-{
-	vector<ftype> fun;
-	for (itype i = start_val[0], j = start_val[1], k = start_val[2]; i < start_val[0] + size; ++i, ++j, ++k)
-	{
-		fun.push_back(
-			coefficent_1 * i + coefficent_2 * j + coefficent_3 * k
-		);
-	}
-	return fun;
-}
-
-matrix<ftype> generate_three_var_lin_function(vector<ftype> start_val, itype size)
-{
-	matrix<ftype> values(size, 3);
-	for (uitype i = 0; i < size; ++i)
-	{
-		for (uitype j = 0; j < 3; j++)
-		{
-			values[i][j] = start_val[j] + i;
-		}
-	}
-	return values;
-}
-
-matrix<ftype> generate_two_var_lin_function(vector<ftype> start_val, itype size)
-{
-	matrix<ftype> values(size, 2);
-	for (uitype i = 0; i < size; ++i)
-	{
-		for (uitype j = 0; j < 2; j++)
-		{
-			values[i][j] = start_val[j] + i;
-		}
-	}
-	return values;
-}
-
-
-std::string draw_matrix(matrix<ftype> matr)
-{
-	std::string str;
-	str.push_back('/');
-	str += std::string(matr.get_cols_num(), '-');
-	str.push_back('\\');
-	str.push_back('\n');
-	for (uitype i = 0; i < matr.get_rows_num(); ++i)
-	{
-		str.push_back('|');
-		for (uitype j = 0; j < matr.get_cols_num(); ++j)
-		{
-			str.push_back(get_symbol(matr[i][j]));
-		}
-		str.push_back('|');
-		str.push_back('\n');
-	}
-	str.push_back('\\');
-	str += std::string(matr.get_cols_num(), '-');
-	str.push_back('/');
-	return str;
-}
+#include"Optimizer.h"
+#include"Utils.h"
 
 array<linear> create_linear_model()
 {
@@ -143,18 +47,7 @@ void rescale(array<ftype>& arr)
 	}
 }
 
-itype find_max(const vector<ftype>& vec)
-{
-	itype max = 0;
-	for (itype i = 0; i < vec.get_size() - 1; ++i)
-	{
-		if (vec[i] < vec[i + 1])
-		{
-			max = i + 1;
-		}
-	}
-	return max;
-}
+
 
 void handle_learning_MNIST()
 {
@@ -174,7 +67,7 @@ void handle_learning_MNIST()
 	vector<ftype> predictions = model.forward(features);//model.forward(features);
 
 	std::cout << "Predictions: " << predictions.to_string() << '\n';
-	model.backward(labels);
+	//model.backward(labels);
 
 	std::cout << "Probabilities after learning: " << model(features).to_string() << '\n';
 	std::cout << "Predicted value: " << find_max(model(features)) << '\n';
@@ -210,7 +103,7 @@ void learn_MNIST()
 		rescale(features);
 		vector<ftype> probabilities = model.forward(features);
 		//std::cout << probabilities.to_string() << '\n';
-		model.backward(labels);
+		//model.backward(labels);
 		//system("cls");
 
 		int pred = find_max(probabilities);
@@ -234,8 +127,8 @@ vector<ftype> get_iris_labels(const std::string iris_name)
 
 array<linear> create_linear_model_iris_1()
 {
-	linear lin1(2, 24, activation_functions::sigmoid);
-	linear lin2(24, 12, activation_functions::sigmoid);
+	linear lin1(2, 24, activation_functions::ReLU);
+	linear lin2(24, 12, activation_functions::ReLU);
 	linear lin3(12, 3, activation_functions::softmax);
 	array<linear> layers;
 	layers.push_back(lin1);
@@ -246,7 +139,7 @@ array<linear> create_linear_model_iris_1()
 
 array<linear> create_linear_model_iris_2()
 {
-	linear lin1(4, 64, activation_functions::ReLU);
+	linear lin1(2, 64, activation_functions::ReLU);
 	linear lin2(64, 32, activation_functions::ReLU);
 	linear lin3(32, 16, activation_functions::ReLU);
 	linear lin4(16, 8, activation_functions::ReLU);
@@ -262,92 +155,92 @@ array<linear> create_linear_model_iris_2()
 
 array<linear> create_linear_model_iris_3()
 {
-	linear lin1(4, 32, activation_functions::ReLU);
-	linear lin2(32, 64, activation_functions::ReLU);
-	linear lin3(64, 32, activation_functions::ReLU);
-	linear lin4(32, 16, activation_functions::ReLU);
-	linear lin5(16, 8, activation_functions::ReLU);
-	linear lin6(8, 3, activation_functions::softmax);
+	linear lin1(2, 3, activation_functions::softmax);
+	array<linear> layers;
+	layers.push_back(lin1);
+	return layers;
+}
+
+array<linear> create_linear_model_iris_4()
+{
+	linear lin1(2, 12, activation_functions::ReLU);
+	linear lin2(12, 6, activation_functions::ReLU);
+	linear lin3(6, 3, activation_functions::softmax);
 	array<linear> layers;
 	layers.push_back(lin1);
 	layers.push_back(lin2);
 	layers.push_back(lin3);
-	layers.push_back(lin4);
-	layers.push_back(lin5);
-	layers.push_back(lin6);
 	return layers;
 }
 
-void handle_learning_IRIS()
+void learn_iris_()
 {
-	uitype num = 8;
-	csv_handler pd("iris.csv");
-	array<array<std::string>> arr = pd.read_file(10);
-	vector<ftype> features(from_string(arr[num](0, 4)));
-	vector<ftype> labels = get_iris_labels(arr[num](4, 5)[0]);
-	std::cout << "Features: " << features.to_string() << '\n';
-	std::cout << "Label: " << arr[num](4, 5)[0] << '\n';
-	std::cout << "Labels: " << labels.to_string() << '\n';
-
-	NeuralNetwork model(create_linear_model_iris_1(), loss_functions::cross_entropy_loss_, 3e-01);
-	//model.set_logging_flag(true);
-
-	vector<ftype> predictions = model.forward(features);
-
-	std::cout << "Predictions: " << predictions.to_string() << '\n';
-	model.backward(labels);
-
-	std::cout << "Probabilities after learning: " << model(features).to_string() << '\n';
-	std::cout << "Predicted value: " << find_max(model(features)) << '\n';
-}
-
-void learn_iris()
-{
-	uitype num = 0, amount = 149, epochs = 1;
+	uitype num = 0, amount = 149, epochs = 30;
 	itype correct = 0;
-	csv_handler pd("iris.csv");
 	std::cout << "File reading" << '\n';
+	csv_handler pd("iris.csv");
+	system("cls");
 	array<array<std::string>> arr = pd.read_file(amount + 1);
-	array<array<std::string>> train = arr(1, amount + 1);
-	array<std::string> a(3);
+
+	array<array<ftype>> f_arr(arr.get_size());
+	for (uitype i = 0; i < arr.get_size(); ++i)
+	{
+		vector<ftype> labels = get_iris_labels(arr[i][4]);
+		arr[i].pop_back();
+		f_arr[i] = from_string_array(arr[i]);
+		for (auto label : labels) f_arr[i].push_back(label);
+	}
+
+	array<array<ftype>> train = f_arr(1, amount + 1);
+	array<ftype> a(5);
 	for (uitype i = 0; i < train.get_size(); ++i)
 	{
 		a[0] = train[i][0];
 		a[1] = train[i][3];
 		a[2] = train[i][4];
+		a[3] = train[i][5];
+		a[4] = train[i][6];
 		train[i] = a;
 	}
-	//array<array<std::string>> test = arr(135, 150);
-	std::cout << "Ended file reading" << '\n';
-	system("cls");
-	NeuralNetwork model(create_linear_model_iris_1(), loss_functions::cross_entropy_loss_, 1e-01);
+
+	array<pair<vector<ftype>, vector<ftype>>> data(train.get_size());
+	for (uitype i = 0; i < train.get_size(); ++i)
+	{
+		data[i] = pair<vector<ftype>, vector<ftype>>(train[i](0, 2), train[i](2, 5));
+		vector<ftype> vec = data[i].get_first();
+		vec.normalize_by_max();
+		data[i].set_first(vec);
+	}
+	
+	data_loader loader(data);
+	array<pair<vector<ftype>, vector<ftype>>> l = loader.get_data();
+
+	NeuralNetwork model(create_linear_model_iris_3(), loss_functions::cross_entropy_loss_, 0.005);
+	GD gradient_descent;
 	model.set_logging_flag(true);
+	gradient_descent.set_Net(model);
+
 	for (uitype i = 0; i < epochs; ++i)
 	{
 		num = 0;
 		correct = 0;
-		std::random_shuffle(&train[0], &train[amount]);
-		
-		clock_t start = clock(), end;
-		for (; num < train.get_size(); ++num)
-		{
-			vector<ftype> features(from_string(train[num](0, 2)));
-			std::string label = train[num](2, 3)[0];
-			vector<ftype> labels = get_iris_labels(label/*train[num](2, 3)[0]*/);
-			vector<ftype> probabilities = model.forward(features);
-			model.backward(labels);
-			//int pred = find_max(probabilities);
-			//std::cout << probabilities.to_string() << '\n';
-			//std::cout << labels.to_string() << '\n';
-			//int target = find_max(labels);
-			//correct += (pred == target);
-		}
 
-		std::random_shuffle(&train[0], &train[amount]);
-		for (uitype i = 0; i < train.get_size(); ++i)
+		std::random_shuffle(&l[0], &l[l.get_size() - 1]);
+
+		loader = l;
+		data_loader train_loader(loader(0, data.get_size() * 0.8));
+		data_loader test_loader(loader(data.get_size() * 0.8, data.get_size()));
+
+		array<data_loader> batches = create_batches(train_loader, 18);
+		clock_t start = clock(), end;
+		for (data_loader batch: batches)
 		{
-			vector<ftype> features(from_string(train[i](0, 2)));
-			vector<ftype> labels = get_iris_labels(train[i](2, 3)[0]);
+			gradient_descent.backward(batch);
+		}
+		for (size_t i = 0; i < test_loader.get_size(); ++i)
+		{
+			vector<ftype> features = test_loader[i].get_first();
+			vector<ftype> labels = test_loader[i].get_second();
 			vector<ftype> probabilities = model(features);
 			int pred = find_max(probabilities);
 			int target = find_max(labels);
@@ -356,13 +249,14 @@ void learn_iris()
 		end = clock();
 		ftype time_taken = ftype(end - start) / ftype(CLOCKS_PER_SEC);
 		std::cout << "Epoch #" << i << '\n';
-		show_pbar(train.get_size(), correct, train.get_size(), time_taken);
-		//std::cout << model.get_layers()[-1].get_weights().to_string() << '\n';
+		show_pbar(test_loader.get_size(), correct, test_loader.get_size(), time_taken);
 	}
+
+	std::cout << "Ended file reading" << '\n';
 }
 
 /**
-* Ã.À.É 52 271
+* Ð“.Ð.Ð™ 52 271
 */
 
 int main()
@@ -488,59 +382,6 @@ int main()
 		std::cout << "Epoch# " << epoch << " | Loss: " << loss_functions::mse_loss_(nn(feature), target) << '\n';
 	}*/
 
-	/*uitype num = 53;
-	csv_handler pd("mnist_train.csv");
-	array<array<std::string>> arr = pd.read_file(100);
-	array<std::string> a = arr[num](1, 785);
-	std::cout << a.get_size() << '\n';
-	array<array<std::string>> ar = a.reshape(28, 28);
-	matrix<std::string> matr(ar);
-	//std::cout << matr[0][0] << '\n';
-	array<std::string> label = arr[num](0, 1);
-	matrix<ftype> fmatr = matr.from_string();
-	fmatr = fmatr / 255;
-	std::cout << "Label: " << label[0] << '\n';
-	std::cout << draw_matrix(fmatr) << '\n';
-	*/
-	
-	//learn_MNIST();
-
-	//handle_learning_MNIST();
-
-	//handle_learning_IRIS();
-
-	learn_iris();
-
-	/*vector<ftype> vec(3);
-	vec[0] = 10;
-	vec[1] = 10;
-	vec[2] = 0;
-
-	vector<ftype> der = activation_functions::derivative(vec, activation_functions::sigmoid);
-
-	std::cout << "vector: " << vec.to_string() << '\n';
-	std::cout << "ReLU: " << activation_functions::sigmoid(vec).to_string() << '\n';
-	std::cout << "derivative: " << der.to_string() << '\n';
-	*/
-
-	/*vector<ftype> vec(3);
-	vec[0] = 10;
-	vec[1] = 10;
-	vec[2] = 0;
-
-	vector<ftype> der = activation_functions::derivative(vec, activation_functions::softmax);
-
-	std::cout << "vector: " << vec.to_string() << '\n';
-	std::cout << "softmax: " << activation_functions::softmax(vec).to_string() << '\n';
-	std::cout << "derivative: " << der.to_string() << '\n';
-	*/
-
-	/*vector<ftype> vec(5);
-	vec[0] = 1;
-	vec[1] = 1;
-	vec[2] = 0;
-	vec[3] = 1;
-	vec[4] = 1;
-	std::cout << activation_functions::softmax(vec).to_string() << '\n';*/
+	learn_iris_();
 	return 0;
 }
